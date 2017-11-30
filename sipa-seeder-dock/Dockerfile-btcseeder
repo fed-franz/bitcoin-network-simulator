@@ -1,0 +1,30 @@
+# btc-seeder docker image
+
+# Debian
+FROM debian:latest
+
+#ENV var=val
+
+RUN apt-get update
+# Install sipa seeder requirements
+RUN apt-get install --yes build-essential libboost-all-dev libssl-dev
+# Install DNS utils
+RUN apt-get install --yes net-tools dnsutils tcpdump
+# dnsutils -> nslookup
+# netcat   -> nc
+
+# Copy bin and script files
+COPY ./bitcoin-seeder /root/bitcoin-seeder
+WORKDIR /root/bitcoin-seeder
+RUN make
+WORKDIR /root/
+#COPY ./sipa-start.sh /root/start.sh
+
+RUN ln -s /root/bitcoin-seeder/dnsseed /usr/local/bin/dnsseed
+#RUN ln -s /root/start.sh /usr/local/bin/start-dnsseed
+
+# Expose Bitcoin ports
+EXPOSE 53/udp 53/tcp 8333 18333
+
+ENTRYPOINT /bin/bash
+# dnsseed --testnet -t 50 -h seed.seeder.btc -n vps.seeder.btc -m admin.seeder.btc

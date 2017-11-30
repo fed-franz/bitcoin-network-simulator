@@ -1,0 +1,16 @@
+$TTL	1D
+
+@	IN	SOA	ns.seeder.btc. admin.seeder.btc. (
+	201710171	; Serial
+	8H		; Refresh
+	2H		; Retry
+	4W		; Expire
+	1D)		; Negative Cache TTL
+
+@	IN	NS	ns.seeder.btc.
+seed	IN	NS	vps.seeder.btc.
+
+ns	IN	A	10.1.1.2
+vps	IN	NS	10.1.1.4
+
+
