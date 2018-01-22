@@ -9,8 +9,9 @@ $TTL	1M
 
 @	IN	NS	ns.seeder.btc.
 
-ns	IN	A	10.1.1.4
+ns	IN	A	10.1.1.2
 x9.seed	IN	A	10.1.1.3
+x9.seed	IN	A	10.1.1.4
 x9.seed	IN	A	10.1.1.5
 x9.seed	IN	A	10.1.1.6
 x9.seed	IN	A	10.1.1.7

@@ -1,11 +1,11 @@
 # btc-box docker image
-# bitcoin-version=0.15
 
 # Debian
 FROM debian:latest
 
+ENV btclocalbinurl=https://github.com/frz-dev/bitcoin-local/files/1647338/bitcoin-local-0.12.1-bin.tar.gz
 ENV datadir=btc-data
-ENV bindir=btc-bin
+ENV bindir=bin
 
 RUN apt-get update
 RUN apt-get install --yes net-tools dnsutils tcpdump
@@ -13,11 +13,13 @@ RUN apt-get install --yes net-tools dnsutils tcpdump
 # netcat   -> nc
 
 # set working directory
-COPY ./$bindir/btc-0.15 /root/$bindir
+#COPY ./$bindir/btc-0.15 /root/$bindir
+RUN wget $btclocalbinurl && tar -zxvf *.tar.gz
 COPY ./$datadir /root/$datadir
 
 RUN ln -s /root/$bindir/* /usr/local/bin
 
+# Create aliases
 ENV btccli="bitcoin-cli -datadir=$datadir"
 RUN echo "alias btc-cli='$btccli'" >> ~/.bashrc \
  && echo "alias getpeers='$btccli getpeerinfo'" >> ~/.bashrc \

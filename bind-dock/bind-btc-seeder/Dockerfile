@@ -25,4 +25,3 @@ ENTRYPOINT service rsyslog start \
 	&& /etc/init.d/bind9 start \
 	&& rndc querylog \
 	&& /bin/bash
-
