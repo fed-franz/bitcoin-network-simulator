@@ -1,0 +1,12 @@
+# testnet-box functionality
+regtest=1
+dnsseed=0
+upnp=0
+
+listenonion=0
+
+#seednode=x9.seed.seeder.btc
+#172.18.0.2
+#dns=x9.seed.seeder.btc
+
+#whitelist=172.17.0.0/16
