@@ -1,24 +1,31 @@
-# btc-box docker image - testnet
-# bitcoin-version=0.15
+# bitcoin-local-box docker image - Testnet
 
 # Debian
 FROM debian:latest
 
-ENV datadir=btc-data
+ENV btclocalbinurl=https://github.com/frz-dev/bitcoin-local/files/1647338/bitcoin-local-0.12.1-bin.tar.gz
+ENV datadir=data
+ENV bindir=bin
 ENV btcnet=testnet3
-ENV bindir=btc-bin
 
 RUN apt-get update
-RUN apt-get install --yes net-tools dnsutils tcpdump
-# dnsutils -> nslookup
-# netcat   -> nc
+RUN apt-get install --yes net-tools dnsutils wget
+# dnsutils  -> nslookup
+# netcat    -> nc
 
 # set working directory
-COPY ./$bindir /root/$bindir
-COPY ./$datadir/bitcoin.conf-testnet /root/$datadir/bitcoin.conf
+RUN mkdir btc
+WORKDIR btc
 
-RUN ln -s /root/$bindir/* /usr/local/bin
+#RUN wget $btclocalbinurl && tar -zxvf *.tar.gz && rm *.tar.gz
+#RUN mkdir $datadir
+COPY ./$bindir $bindir
+COPY ./$datadir/bitcoin.conf-testnet $datadir/bitcoin.conf
 
+RUN ln -s /btc/$bindir/bitcoind /usr/local/bin/bitcoind
+RUN ln -s /btc/$bindir/bitcoin-cli /usr/local/bin/bitcoin-cli
+
+# Create aliases
 ENV btccli="bitcoin-cli -datadir=$datadir"
 RUN echo "alias btc-cli='$btccli'" >> ~/.bashrc \
  && echo "alias getpeers='$btccli getpeerinfo'" >> ~/.bashrc \
@@ -28,11 +35,11 @@ RUN echo "alias btc-cli='$btccli'" >> ~/.bashrc \
  && echo "alias btcstart='bitcoind -datadir=$datadir -onlynet=ipv4 -debug -logips -daemon'" >> ~/.bashrc \
  && echo "alias btcstop='$btccli stop'" >> ~/.bashrc
 
-WORKDIR /root/
 
 # Expose Bitcoin ports
 EXPOSE 18333 18332
 
-ENTRYPOINT echo "nameserver 10.1.1.2" > /etc/resolv.conf \
- && bitcoind -datadir=$datadir -debug -logips -daemon \
- && /bin/bash
+# First line clears the DNS nameserver, imported at runtime by docker
+ENTRYPOINT echo "nameserver 127.0.0.11" > /etc/resolv.conf \
+  && bitcoind -datadir=$datadir -debug -logips -daemon \
+  && /bin/bash
