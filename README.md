@@ -1,5 +1,6 @@
 # local-btc-net
-A local Bitcoin network reproduced with Docker
+It allows to locally simulate a Bitcoin network with Docker.
+Currently working with Testnet only.
 
 1. Create an isolated network:
 docker network create --internal --subnet 10.1.1.0/24 btcnet

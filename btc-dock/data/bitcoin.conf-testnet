@@ -9,3 +9,6 @@ listenonion=0
 #dns=x9.seed.seeder.btc
 
 #whitelist=172.17.0.0/16
+
+#rpcuser=user
+#rpcpassword=password

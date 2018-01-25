@@ -50,7 +50,9 @@ alias btcstop='$btccli stop'\n\
 EXPOSE 18333 18332
 
 # First line clears the DNS nameserver, imported at runtime by docker
-# Then run bitcoin
+# Then run bitcoin and start mining
 ENTRYPOINT echo "nameserver 127.0.0.11" > /etc/resolv.conf \
   && bitcoind -datadir=$datadir -onlynet=ipv4 -debug -logips -daemon \
+  && sleep 5 \
+  && bitcoin-cli -datadir=data setgenerate true \
   && /bin/bash
