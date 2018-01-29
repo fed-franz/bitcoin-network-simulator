@@ -6,7 +6,7 @@ docker network create --internal --subnet 10.1.0.0/16 btcnet
 
 #Start DNS
 echo "Starting Bitcoin DNS seeder"
-docker run -d --network btcnet --ip 10.1.1.2 fedfranz/bitcoinlocal-seeder:bind
+docker run -d --network btcnet --ip 10.1.1.2 --name="btc-dns-seeder" fedfranz/bitcoinlocal-seeder:bind
 
 #Start nodes
   for i in {1..100}
