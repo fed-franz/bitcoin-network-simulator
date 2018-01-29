@@ -24,4 +24,4 @@ ENTRYPOINT service rsyslog start \
 	&& echo "nameserver 127.0.0.1" > /etc/resolv.conf \
 	&& /etc/init.d/bind9 start \
 	&& rndc querylog \
-	&& /bin/bash
+	&& tail /dev/null
