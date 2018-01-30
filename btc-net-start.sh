@@ -40,6 +40,6 @@ fi
 #Start miners
   for i in $(seq 1 $numminers)
   do
-      echo "Starting Bitcoin node container"
+      echo "Starting Bitcoin miner container"
       docker run -d --network btcnet --dns=10.1.1.2 fedfranz/bitcoinlocal:0.12.0-testnet-miner
   done
