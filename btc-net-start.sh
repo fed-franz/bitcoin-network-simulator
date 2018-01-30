@@ -31,14 +31,14 @@ else
 fi
 
 #Start nodes
-  for i in {1..$numnodes}
+  for i in $(seq 1 $numnodes)
   do
       echo "Starting Bitcoin node container"
       docker run -d --network btcnet --dns=10.1.1.2 fedfranz/bitcoinlocal:0.12.0-testnet
   done
 
 #Start miners
-  for i in {1..$numminers}
+  for i in $(seq 1 $numminers)
   do
       echo "Starting Bitcoin node container"
       docker run -d --network btcnet --dns=10.1.1.2 fedfranz/bitcoinlocal:0.12.0-testnet-miner
