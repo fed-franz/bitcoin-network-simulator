@@ -1,13 +1,15 @@
-# local-btc-net
+# Local Bitcoin Network
 It allows to locally simulate a Bitcoin network with Docker.
 Currently working with Testnet only.
 
-1. Create an isolated network:
-docker network create --internal --subnet 10.1.1.0/24 btcnet
+Use 'btc-net-start.sh' to:
+1. Create an isolated /16 IP4 network (btcnet)
+2. Run the BIND DNS server at IP 10.1.1.2
+3. Run nodes and miners
 
-2. Run the BIND dns:
-docker run -it --network btcnet fedfranz/bitcoinlocal-seeder:bind
-# The DNS server will be at IP 10.1.1.2
+### Usage
+'./btc-net-start.sh <number-of-nodes> <number-of-miners>'
 
-3. Run nodes:
-docker run -it --network btcnet --dns=10.1.1.2
+Default parameters are:
+- number-of-nodes = 100
+- number-of-miners = 10
