@@ -20,21 +20,26 @@ else
   echo "Creating 'btcnet' network"
   docker network create --internal --subnet 10.1.0.0/16 btcnet
 fi
-exit
+
 #Start DNS
-echo "Starting Bitcoin DNS seeder"
-docker run -d --network btcnet --ip 10.1.1.2 --name="btc-dns-seeder" fedfranz/bitcoinlocal-seeder:bind
+if docker container list | grep -q 'btc-dns-seeder'
+then
+  echo "DNS seeder container already exists; skipping..."
+else
+  echo "Starting Bitcoin DNS seeder"
+  docker run -d --network btcnet --ip 10.1.1.2 --name="btc-dns-seeder" fedfranz/bitcoinlocal-seeder:bind
+fi
 
 #Start nodes
-  for i in {1..100}
+  for i in {1..$numnodes}
   do
       echo "Starting Bitcoin node container"
-      docker run -d --network btcnet --dns=10.1.1.2 --name="btc-$i" fedfranz/bitcoinlocal:0.12.0-testnet
+      docker run -d --network btcnet --dns=10.1.1.2 fedfranz/bitcoinlocal:0.12.0-testnet
   done
 
 #Start miners
-  for i in {1..100}
+  for i in {1..$numminers}
   do
       echo "Starting Bitcoin node container"
-      docker run -d --network btcnet --dns=10.1.1.2 --name="btc-miner-$i" fedfranz/bitcoinlocal:0.12.0-testnet-miner
+      docker run -d --network btcnet --dns=10.1.1.2 fedfranz/bitcoinlocal:0.12.0-testnet-miner
   done
