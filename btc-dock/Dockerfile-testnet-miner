@@ -21,7 +21,7 @@ WORKDIR $btcdir
 
 #RUN wget $btclocalbinurl && tar -zxvf *.tar.gz && rm *.tar.gz
 RUN mkdir $datadir
-COPY ./$datadir/bitcoin.conf-testnet $datadir/bitcoin.conf
+COPY ./$datadir/bitcoin.conf-testnet-miner $datadir/bitcoin.conf
 
 #COPY ./$bindir $bindir
 RUN mkdir $bindir \
@@ -52,6 +52,4 @@ EXPOSE 18333 18332
 # First line clears the DNS nameserver, imported at runtime by docker
 # Then run bitcoin and start mining
 ENTRYPOINT echo "nameserver 127.0.0.11" > /etc/resolv.conf \
-  && bitcoind -datadir=$datadir -logips -daemon \
-  && sleep 5 && bitcoin-cli -datadir=data setgenerate true \
-  && tail -f /dev/null
+  && bitcoind -datadir=$datadir -logips
