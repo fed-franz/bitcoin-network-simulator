@@ -4,7 +4,7 @@
 FROM debian:latest
 
 RUN apt-get update
-RUN apt-get install --yes net-tools dnsutils wget
+RUN apt-get install --yes net-tools dnsutils wget bc
 # dnsutils  -> nslookup
 # netcat    -> nc
 
