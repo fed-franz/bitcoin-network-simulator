@@ -32,7 +32,10 @@ while true; do
       # Select rand amount  (1-balance) #TODO: Select dust amount as minimum
       amount=$( printf "%.8f\n" $(echo "$((RANDOM%$balance)) / 100000000" | bc -l) )
       # Select rand dest BTC address from pool  - Nodes share a common pool (access via DNS)
+
       destaddr="mzHGGPUBSQeNdPhaKMrN6EyCaWCDTve5C2" #TODO pool
+      #host -t txt  btc.seeder.btc
+      
       # Send transaction
       # btc-cli sendtoaddress $destaddr $amount
       output=$( { btc-cli sendtoaddress $destaddr $amount ; } 2>&1)

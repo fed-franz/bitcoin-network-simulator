@@ -1,15 +1,15 @@
-$TTL	1M
+$TTL 86400      ; 1 day
 
-@	IN	SOA	ns.seeder.btc. host.seeder.btc. (
-	201710171	; Serial
-	8H		; Refresh
-	2H		; Retry
-	4W		; Expire
-	1M)		; Negative Cache TTL
-
+@       IN SOA  ns.seeder.btc. root.seeder.btc. (
+                                  2012080701 ; serial
+                                  28800      ; refresh (8 hours)
+                                  7200       ; retry (2 hours)
+                                  604800     ; expire (1 week)
+                                  86400      ; minimum (1 day)
+                                  )
 @	IN	NS	ns.seeder.btc.
-
 ns	IN	A	10.1.1.2
+
 seed	IN	A	10.1.0.3
 seed	IN	A	10.1.0.5
 seed	IN	A	10.1.0.10
@@ -31,6 +31,3 @@ seed	IN	A	10.1.0.85
 seed	IN	A	10.1.0.90
 seed	IN	A	10.1.0.95
 seed	IN	A	10.1.0.100
-x9.seed	IN	A	10.1.1.3
-x9.seed	IN	A	10.1.1.4
-x9.seed	IN	A	10.1.1.5

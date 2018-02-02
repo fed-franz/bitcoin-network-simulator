@@ -1,11 +1,10 @@
 # btc-dns-box docker image
 
-# Debian
 FROM ubuntu:latest
 
 # add bitcoind from the official PPA
 RUN apt-get update \
- && apt-get install --yes bind9 bind9utils rsyslog tcpdump
+ && apt-get install --yes bind9 bind9utils rsyslog tcpdump dnsutils
 
 RUN mkdir /var/log/named \
 && chown -R bind:root /var/log/named \
@@ -24,4 +23,5 @@ ENTRYPOINT service rsyslog start \
 	&& echo "nameserver 127.0.0.1" > /etc/resolv.conf \
 	&& /etc/init.d/bind9 start \
 	&& rndc querylog \
+  && chmod -R 0777 /etc/bind/zones/ \
 	&& tail -f /dev/null
