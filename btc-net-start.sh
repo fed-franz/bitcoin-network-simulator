@@ -17,6 +17,7 @@ if docker network list | grep -q 'btcnet'
 then
   echo "'btcnet' already exists; skipping..."
 else
+  #TODO Create multiple networks
   echo "Creating 'btcnet' network"
   docker network create --internal --subnet 10.1.0.0/16 btcnet
 fi
@@ -30,6 +31,7 @@ else
   docker run -d --network btcnet --ip 10.1.1.2 --name="btc-dns-seeder" fedfranz/bitcoinlocal-seeder:bind
 fi
 
+#TODO Start fixed nodes with specific IPs (those returned by the DNS)
 #Start nodes
   for i in $(seq 1 $numnodes)
   do

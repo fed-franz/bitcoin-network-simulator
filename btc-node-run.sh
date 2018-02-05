@@ -1,6 +1,7 @@
 #!/bin/bash
 
 # BASIC ALGORITHM
+# Add receiving addr to pool
 # Infinite loop
   # Sleep rand time (0-60 sec)
   # Check balance
@@ -11,10 +12,10 @@
       # Select rand dest BTC address from pool  - Nodes share a common pool (access via DNS)
       # Send transaction
 
-#TODO (inside loop?)
+#TODO (inside loop?) - After every transaction ?
 #Add receiving addr to pool:
-#btc-cli getaccountaddress "" #Current receiving address
-#example address mzHGGPUBSQeNdPhaKMrN6EyCaWCDTve5C2
+(echo "update add btc.seeder.btc 86400 txt $(btc-cli getaccountaddress "")" ; echo send) | nsupdate
+
 
 # Infinite loop
 while true; do
@@ -31,11 +32,10 @@ while true; do
     then
       # Select rand amount  (1-balance) #TODO: Select dust amount as minimum
       amount=$( printf "%.8f\n" $(echo "$((RANDOM%$balance)) / 100000000" | bc -l) )
-      # Select rand dest BTC address from pool  - Nodes share a common pool (access via DNS)
 
-      destaddr="mzHGGPUBSQeNdPhaKMrN6EyCaWCDTve5C2" #TODO pool
-      #host -t txt  btc.seeder.btc
-      
+      # Select rand dest BTC address from pool  - Nodes share a common pool (access via DNS)
+      destaddr=$(host -t txt  btc.seeder.btc | head -n 1 | awk 'END {print $NF}')
+
       # Send transaction
       # btc-cli sendtoaddress $destaddr $amount
       output=$( { btc-cli sendtoaddress $destaddr $amount ; } 2>&1)
