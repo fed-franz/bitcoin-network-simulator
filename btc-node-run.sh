@@ -19,6 +19,8 @@
 
 # Infinite loop
 while true; do
+  #TODO Go offline with X probability (stop container)
+
   # Sleep rand time (0-60 sec)
   sleep $((RANDOM%60))
   # Check balance
@@ -28,16 +30,18 @@ while true; do
   if (( $balance > 0 ))
   then
     # Send coins with rand 10% of probability
+    #TODO Tune probability
     if (( RANDOM%100  >= 90 ))
     then
-      # Select rand amount  (1-balance) #TODO: Select dust amount as minimum
+      # Select rand amount  (1-balance)
+      #TODO Select dust amount as minimum
+      #TODO Tune probability
       amount=$( printf "%.8f\n" $(echo "$((RANDOM%$balance)) / 100000000" | bc -l) )
 
       # Select rand dest BTC address from pool  - Nodes share a common pool (access via DNS)
       destaddr=$(host -t txt  btc.seeder.btc | head -n 1 | awk 'END {print $NF}')
 
       # Send transaction
-      # btc-cli sendtoaddress $destaddr $amount
       output=$( { btc-cli sendtoaddress $destaddr $amount ; } 2>&1)
       if (( $? > 0 )); then echo $output; fi
     fi
