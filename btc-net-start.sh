@@ -29,6 +29,9 @@ then
 else
   echo "Starting Bitcoin DNS seeder"
   docker run -d --network btcnet --ip 10.1.1.2 --name="btc-dns-seeder" fedfranz/bitcoinlocal-seeder:bind
+  if [ $? -ne 0 ]; then
+    echo "ERROR: Failed to start DNS container - exiting..." && exit $?
+  fi
 fi
 
 #TODO Start fixed nodes with specific IPs (those returned by the DNS)
