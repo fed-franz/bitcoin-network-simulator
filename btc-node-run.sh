@@ -30,12 +30,13 @@ while true; do
   if (( $balance > 0 ))
   then
     # Send coins with rand 10% of probability
-    #TODO Tune probability
+    #TODO Tune probability - according to per-node tx rate (~ 1/sec total in network)
     if (( RANDOM%100  >= 90 ))
     then
       # Select rand amount  (1-balance)
-      #TODO Select dust amount as minimum
-      #TODO Tune probability
+      #TODO Select dust amount as minimum - the default dust limit in 0.14.0+ is 546 satoshis
+      ## Maybe we can just ignore it.
+      #TODO Tune probability ? According to what?
       amount=$( printf "%.8f\n" $(echo "$((RANDOM%$balance)) / 100000000" | bc -l) )
 
       # Select rand dest BTC address from pool  - Nodes share a common pool (access via DNS)

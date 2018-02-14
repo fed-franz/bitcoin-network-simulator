@@ -32,7 +32,7 @@ RUN mkdir $bindir \
 RUN ln -s /btc/$bindir/bitcoind /usr/local/bin/bitcoind
 RUN ln -s /btc/$bindir/bitcoin-cli /usr/local/bin/bitcoin-cli
 
-#COPY ./btc-run.sh ./
+#COPY ./btc-node-run.sh ./
 
 # Create aliases
 ENV btccli="bitcoin-cli -datadir=$btcdir/$datadir"
@@ -52,4 +52,5 @@ EXPOSE 18333 18332
 # First clear the DNS nameserver, imported at runtime by docker
 # Then run bitcoin
 ENTRYPOINT echo "nameserver 127.0.0.11" > /etc/resolv.conf \
-  && bitcoind -datadir=$datadir -logips
+  && bitcoind -datadir=$datadir -logips -daemon \
+  && ./btc-node-run.sh
