@@ -32,7 +32,7 @@ RUN mkdir $bindir \
 RUN ln -s /btc/$bindir/bitcoind /usr/local/bin/bitcoind
 RUN ln -s /btc/$bindir/bitcoin-cli /usr/local/bin/bitcoin-cli
 
-#COPY ./btc-run.sh ./
+COPY ./btc-node-run.sh ./
 
 # Create aliases
 ENV btccli="bitcoin-cli -datadir=$btcdir/$datadir"

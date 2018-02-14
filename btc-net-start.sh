@@ -22,6 +22,13 @@ else
   docker network create --internal --subnet 10.1.0.0/16 btcnet
 fi
 
+#Update docker images
+docker pull fedfranz/bitcoinlocal-seeder:bind
+docker pull fedfranz/bitcoinlocal-seeder:bind-it
+docker pull fedfranz/bitcoinlocal:0.12.0-testnet
+docker pull fedfranz/bitcoinlocal:0.12.0-testnet-it
+docker pull fedfranz/bitcoinlocal:0.12.0-testnet-miner
+
 #Start DNS
 if docker container list | grep -q 'btc-dns-seeder'
 then
