@@ -35,24 +35,13 @@ RUN ln -s /btc/$bindir/bitcoin-cli /usr/local/bin/bitcoin-cli
 COPY ./create_aliases.sh ./
 COPY ./btc-node-run.sh ./
 
-# Create aliases
-ENV btccli="bitcoin-cli -datadir=$btcdir/$datadir"
-RUN printf "\
-alias btc-cli='$btccli'\n\
-alias getpeers='$btccli getpeerinfo'\n\
-alias getblockcount='$btccli getblockcount'\n\
-alias getlog='cat $datadir/$btcnet/debug.log'\n\
-alias getpeersaddr='getpeers | grep addr'\n\
-alias btcstart='bitcoind -datadir=$datadir -onlynet=ipv4 -debug -logips -daemon'\n\
-alias btcstop='$btccli stop'\n\
-" >> ~/.bashrc
-
 # Expose Bitcoin ports
 EXPOSE 18333 18332
 
 # First line clears the DNS nameserver, imported at runtime by docker
 # Then run bitcoin and start mining
 ENTRYPOINT echo "nameserver 127.0.0.11" > /etc/resolv.conf \
+  && ./create_aliases.sh $btcdir $datadir $btcnet \
   && bitcoind -datadir=$datadir -logips -daemon \
   && sleep 1 \
   && /bin/bash -i -c "source btc-node-run.sh $btcdir $datadir $btcnet"
