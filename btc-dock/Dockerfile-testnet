@@ -32,6 +32,7 @@ RUN mkdir $bindir \
 RUN ln -s /btc/$bindir/bitcoind /usr/local/bin/bitcoind
 RUN ln -s /btc/$bindir/bitcoin-cli /usr/local/bin/bitcoin-cli
 
+#COPY ./create_aliases.sh ./
 COPY ./btc-node-run.sh ./
 
 # Create aliases
@@ -53,4 +54,4 @@ EXPOSE 18333 18332
 # Then run bitcoin
 ENTRYPOINT echo "nameserver 127.0.0.11" > /etc/resolv.conf \
   && bitcoind -datadir=$datadir -logips -daemon \
-  && ./btc-node-run.sh
+  && /bin/bash -i -c "source btc-node-run.sh $btcdir $datadir $btcnet"

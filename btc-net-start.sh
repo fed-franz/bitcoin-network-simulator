@@ -42,18 +42,18 @@ else
 fi
 
 #TODO Start fixed nodes with specific IPs (those returned by the DNS)
-#Start nodes
-  for i in $(seq 1 $numnodes)
-  do
-      echo "Starting Bitcoin node container"
-      docker run -d --network btcnet --dns=10.1.1.2 fedfranz/bitcoinlocal:0.12.0-testnet
-  done
-
 #Start miners
   for i in $(seq 1 $numminers)
   do
       echo "Starting Bitcoin miner container"
       docker run -d --network btcnet --dns=10.1.1.2 fedfranz/bitcoinlocal:0.12.0-testnet-miner
+  done
+  
+#Start nodes
+  for i in $(seq 1 $numnodes)
+  do
+      echo "Starting Bitcoin node container"
+      docker run -d --network btcnet --dns=10.1.1.2 fedfranz/bitcoinlocal:0.12.0-testnet
   done
 
   #TODO loop nodes on/off
