@@ -36,9 +36,9 @@ while true; do
   sleep $((RANDOM%300))
   # Check balance
   balance=$( printf "%.0f\n" $(echo "$(btc-cli getbalance | bc -l) * 100000000" | bc -l) | bc )
+  echo "balance=$balance"
   if (( $balance > 0 ))
   then
-    echo "balance=$balance"
     # Send coins with rand 10% of probability
     #TODO Tune probability - according to per-node tx rate (~ 1/sec total in network)
     if (( RANDOM%100  >= 50 ))
@@ -51,7 +51,7 @@ while true; do
       amount=$( printf "%.8f\n" $(echo "$((RANDOM%$balance)) / 100000000" | bc -l) )
 
       # Select rand dest BTC address from pool  - Nodes share a common pool (access via DNS)
-      destaddr=$(host -t txt  btc.seeder.btc | head -n 1 | awk 'END {print $NF}')
+      destaddr=$(host -t txt  btc.seeder.btc | head -n 1 | grep -oP '"\K[^"]+')
 
       echo "Sending $amount satoshis to $destaddr"
 
