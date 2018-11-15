@@ -18,11 +18,13 @@ then
   echo "'btcnet' already exists; skipping..."
 else
   #TODO Create multiple networks
+  #TODO Take nun of subnets as a parameter
   echo "Creating 'btcnet' network"
   docker network create --internal --subnet 10.1.0.0/16 btcnet
 fi
 
 #Update docker images
+#TODO Take list of images as a parameter
 docker pull fedfranz/bitcoinlocal-seeder:bind
 docker pull fedfranz/bitcoinlocal-seeder:bind-it
 docker pull fedfranz/bitcoinlocal:0.12.0-testnet
@@ -30,6 +32,7 @@ docker pull fedfranz/bitcoinlocal:0.12.0-testnet-it
 docker pull fedfranz/bitcoinlocal:0.12.0-testnet-miner
 
 #Start DNS
+#TODO mv to docker-bind container; automatically add first N nodes to the config file, after starting the containers
 if docker container list | grep -q 'btc-dns-seeder'
 then
   echo "DNS seeder container already exists; skipping..."
@@ -48,10 +51,11 @@ fi
       echo "Starting Bitcoin miner container"
       docker run -d --network btcnet --dns=10.1.1.2 fedfranz/bitcoinlocal:0.12.0-testnet-miner
   done
-  
+
 #Start nodes
   for i in $(seq 1 $numnodes)
   do
+      #TODO For each container in the list
       echo "Starting Bitcoin node container"
       docker run -d --network btcnet --dns=10.1.1.2 fedfranz/bitcoinlocal:0.12.0-testnet
   done
