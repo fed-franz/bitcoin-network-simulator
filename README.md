@@ -10,6 +10,11 @@ Use 'btc-net-start.sh' to:
 ### Usage
 './btc-net-start.sh <number-of-nodes> <number-of-miners>'
 
-Default parameters are:
-- number-of-nodes = 100
-- number-of-miners = 10
+Default parameters are:  
+- number-of-nodes = 100  
+- number-of-miners = 10  
+
+### DNS
+
+To check if the DNS is working, use the following command:
+`nslookup seed.seeder.btc SERVER_IP_ADDRESS`

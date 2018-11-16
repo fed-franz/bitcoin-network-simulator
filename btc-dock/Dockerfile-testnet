@@ -1,5 +1,7 @@
 # bitcoin-local-box docker image - Testnet
 
+#TODO # interactive version (btcnode:it)
+
 # Debian
 FROM debian:latest
 
