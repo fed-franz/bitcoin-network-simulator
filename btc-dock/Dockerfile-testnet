@@ -10,8 +10,11 @@ RUN apt-get install --yes net-tools dnsutils wget bc
 # dnsutils  -> nslookup
 # netcat    -> nc
 
+ARG binuri=https://github.com/frz-dev/bitcoin-local/raw/0.12.0-local/bin
+
 # Local ENV
-ENV btcbinurl=https://github.com/frz-dev/bitcoin-local/raw/0.12.0-local/bin
+#TODO accept both local or url
+#ENV binuri=https://github.com/frz-dev/bitcoin-local/raw/0.12.0-local/bin
 ENV btcdir=/btc
 ENV datadir=data
 ENV bindir=bin
@@ -25,24 +28,32 @@ WORKDIR $btcdir
 RUN mkdir $datadir
 COPY ./$datadir/bitcoin.conf-testnet $datadir/bitcoin.conf
 
-#COPY ./$bindir $bindir
-RUN mkdir $bindir \
- && wget -O $bindir/bitcoind $btcbinurl/bitcoind \
- && wget -O $bindir/bitcoin-cli $btcbinurl/bitcoin-cli \
- && chmod +x $bindir/bitcoind $bindir/bitcoin-cli
+RUN mkdir $bindir
+COPY ./$bindir $bindir
+# && wget -O $bindir/bitcoind $binuri/bitcoind \
+# && wget -O $bindir/bitcoin-cli $binuri/bitcoin-cli \
+RUN chmod +x $bindir/bitcoind $bindir/bitcoin-cli
 
 RUN ln -s /btc/$bindir/bitcoind /usr/local/bin/bitcoind
 RUN ln -s /btc/$bindir/bitcoin-cli /usr/local/bin/bitcoin-cli
 
-#COPY ./create_aliases.sh ./
 COPY ./btc-node-run.sh ./
+
+ENV btccli="bitcoin-cli -datadir=$datadir"
+RUN echo "alias btc-cli='$btccli'" >> ~/.bashrc \
+ && echo "alias getpeers='$btccli getpeerinfo'" >> ~/.bashrc \
+ && echo "alias getblockcount='$btccli getblockcount'" >> ~/.bashrc \
+ && echo "alias getlog='cat $datadir/$btcnet/debug.log'" >> ~/.bashrc \
+ && echo "alias getpeersaddr='getpeers | grep addr'" >> ~/.bashrc \
+ && echo "alias btcstart='bitcoind -datadir=$datadir -onlynet=ipv4 -debug -logips -daemon'" >> ~/.bashrc \
+ && echo "alias btcstop='$btccli stop'" >> ~/.bashrc
 
 # Expose Bitcoin ports
 EXPOSE 18333 18332
 
 # First clear the DNS nameserver, imported at runtime by docker
 # Then run bitcoin
-ENTRYPOINT echo "nameserver 127.0.0.11" > /etc/resolv.conf \
-  && ./create_aliases.sh $btcdir $datadir $btcnet \
-  && bitcoind -datadir=$datadir -logips -daemon \
-  && /bin/bash -i -c "source btc-node-run.sh $btcdir $datadir $btcnet"
+ENTRYPOINT echo "nameserver 127.0.0.11" > /etc/resolv.conf && /bin/bash
+#  && bitcoind -datadir=$datadir -logips
+#  \
+#  && /bin/bash -i -c "source btc-node-run.sh $btcdir $datadir $btcnet"

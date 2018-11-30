@@ -11,26 +11,49 @@ function check_exit () {
 }
 
 ### ENVIRONMENT ###
-numnodes=100
-numminers=10
+NUM_NODES=100
+NUM_MINERS=10
 
 DNS_DOCK="fedfranz/btcnet-dns"
-DNS_DOCK_NAME="btcdns"
+DNS_NAME="btcdns"
 DNS_IP="10.1.1.2"
 BTCNET=btcnet
 BTC_NODE_DOCK="fedfranz/bitcoinlocal:0.12.0-testnet"
 BTC_MINER_DOCK="fedfranz/bitcoinlocal:0.12.0-testnet-miner"
+RUN_OPTIONS=""
 
 #ARGS
-if [ ! -z "$1" ]
-  then numnodes=$1
-fi
-if [ ! -z "$2" ]
-  then numminers=$2
-fi
+### ARGUMENTS PARSING ###
+#TODO: dns IP, subnets
+for i in "$@"
+do
+case $i in
+    -n=*|--num-nodes=*)
+      NUM_NODES="${i#*=}"
+      shift
+    ;;
+    -m=*|--num-miners=*)
+      NUM_MINERS="${i#*=}"
+      shift
+    ;;
+    -dns=*|--dns_image=*)
+      DNS_DOCK="${i#*=}"
+      shift
+    ;;
+    -btc=*|--btc_image=*)
+      BTC_NODE_DOCK="${i#*=}"
+      shift
+    ;;
+    *)
+      RUN_OPTIONS+=" $i"
+      shift
+    ;;
+esac
+done
+
 
 ### BEGINNING OF PROGRAM ###
-echo "Starting $numnodes nodes and $numminers miners"
+echo "Starting $NUM_NODES nodes and $NUM_MINERS miners"
 
 
 #Create btcnet - maybe multiple ones
@@ -48,25 +71,25 @@ fi
 
 #Update docker images
 #TODO Take list of images as a parameter
-docker pull $BTC_NODE_DOCK
-docker pull $BTC_MINER_DOCK
-docker pull $DNS_DOCK
+# docker pull $BTC_NODE_DOCK
+# docker pull $BTC_MINER_DOCK
+# docker pull $DNS_DOCK
 
 
 #Start DNS
 #TODO automatically add first N nodes to the config file, after starting the containers (alternatively, just add the first 10 IPs to the zone file)
-if docker ps | grep -q $DNS_DOCK_NAME
+if docker ps | grep -q $DNS_NAME
 then
   echo "DNS seeder container already exists; skipping..."
 else
   echo "Starting Bitcoin DNS seeder"
-  docker run -d --network $BTCNET --ip $DNS_IP --name=$DNS_DOCK_NAME $DNS_DOCK
+  docker run -d --network $BTCNET --ip $DNS_IP --name=$DNS_NAME $DNS_DOCK
   check_exit "docker run $DNS_DOCK"
 fi
 
 #TODO Start fixed nodes with specific IPs (those returned by the DNS)
 #Start miners
-  for i in $(seq 1 $numminers)
+  for i in $(seq 1 $NUM_MINERS)
   do
       echo "Starting Bitcoin miner container"
       docker run -d --network $BTCNET --dns=$DNS_IP $BTC_MINER_DOCK
@@ -74,7 +97,7 @@ fi
   done
 
 #Start nodes
-  for i in $(seq 1 $numnodes)
+  for i in $(seq 1 $NUM_NODES)
   do
       #TODO For each container in the list
       echo "Starting Bitcoin node container"

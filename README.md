@@ -15,6 +15,9 @@ Default parameters are:
 - number-of-miners = 10  
 
 ### DNS
-
-To check if the DNS is working, use the following command:
-`nslookup seed.seeder.btc SERVER_IP_ADDRESS`
+Build:
+`docker build -t btcnet-dns .`
+Run:
+`docker run -d --rm --network btcnet --ip 10.1.1.2 --name=btcdns btcnet-dns`
+Check if the DNS is working:
+`nslookup seed.seeder.btc 10.1.1.2`
