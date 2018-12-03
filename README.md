@@ -16,8 +16,17 @@ Default parameters are:
 
 ### DNS
 Build:
-`docker build -t btcnet-dns .`
+`docker build -t btcnet-dns .`  
 Run:
-`docker run -d --rm --network btcnet --ip 10.1.1.2 --name=btcdns btcnet-dns`
+`docker run -d --rm --network btcnet --ip 10.1.1.2 --name=btcdns btcnet-dns`  
 Check if the DNS is working:
-`nslookup seed.seeder.btc 10.1.1.2`
+`nslookup seed.seeder.btc 10.1.1.2`  
+Stop:
+`docker stop btcdns`
+
+To overwrite BIND files without rebuilding the container you can mount a folder at `/root/mnt`.
+Files in this folder will be copied recursively into `/etc/bind` and overwrite default files.  
+In order to work properly, the mounted folder must have the same structure as `/etc/bind`. See `bind` folder in this repo as a reference.  
+You can use docker's `-v` option to mount the folder at runtime.  
+For instance:  
+`docker run -d --rm --network btcnet --ip 10.1.1.2 --name=btcdns -v $(pwd)/bind:/root/mnt fedfranz/btcnet-dns`
