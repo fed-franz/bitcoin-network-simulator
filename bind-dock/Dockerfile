@@ -13,9 +13,10 @@ RUN mkdir /var/log/named \
 && chmod -R 775 /var/log/named
 
 # Set up BIND9
-COPY ./named.conf /etc/bind/named.conf
-COPY ./seeder.btc.zone /etc/bind/zones/seeder.btc.zone
-#COPY ./btc.seeder.btc.zone /etc/bind/zones/btc.seeder.btc.zone
+ENV binddir=./bind
+COPY $binddir/named.conf /etc/bind/named.conf
+COPY $binddir/zones/seeder.btc.zone /etc/bind/zones/seeder.btc.zone
+RUN mkdir /root/mnt
 
 WORKDIR /root/
 COPY ./$startscript ./
