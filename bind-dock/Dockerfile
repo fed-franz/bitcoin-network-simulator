@@ -25,5 +25,3 @@ RUN chmod a+x ./$startscript
 EXPOSE 53/udp 53/tcp
 
 ENTRYPOINT ./$startscript
-
-#TODO Check if seeder.btc.zone file in "mount" path. At runtime mount folder to overwrite default file
