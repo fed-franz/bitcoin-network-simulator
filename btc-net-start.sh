@@ -17,9 +17,10 @@ NUM_MINERS=10
 DNS_DOCK="fedfranz/btcnet-dns"
 DNS_NAME="btcdns"
 DNS_IP="10.1.1.2"
-BTCNET=btcnet
+BTC_NET=""
+LOCALNET=btcnet
 # BTC_NODE_DOCK="fedfranz/bitcoinlocal:0.12.0-testnet"
-BTC_NODE_DOCK="fedfranz/btcnet-node:0.17"
+BTC_NODE_DOCK="fedfranz/btcnet-node"
 BTC_MINER_DOCK="fedfranz/bitcoinlocal:0.12.0-testnet-miner"
 RUN_OPTIONS=""
 
@@ -45,6 +46,10 @@ case $i in
       BTC_NODE_DOCK="${i#*=}"
       shift
     ;;
+    -net=*|--btc_network=*)
+      BTC_NET="${i#*=}"
+      shift
+    ;;
     *)
       RUN_OPTIONS+=" $i"
       shift
@@ -58,14 +63,14 @@ echo "Starting $NUM_NODES nodes and $NUM_MINERS miners"
 
 
 #Create btcnet - maybe multiple ones
-if docker network list | grep -q $BTCNET
+if docker network list | grep -q $LOCALNET
 then
-  echo "$BTCNET already exists; skipping..."
+  echo "$LOCALNET already exists; skipping..."
 else
   #TODO Create multiple networks
   #TODO Take nun of subnets as a parameter
-  echo "Creating $BTCNET network"
-  docker network create --internal --subnet 10.1.0.0/16 $BTCNET
+  echo "Creating $LOCALNET network"
+  docker network create --internal --subnet 10.1.0.0/16 $LOCALNET
   check_exit "docker network create"
 fi
 
@@ -84,7 +89,7 @@ then
   echo "DNS seeder container already exists; skipping..."
 else
   echo "Starting Bitcoin DNS seeder"
-  docker run -d --network $BTCNET --ip $DNS_IP --name=$DNS_NAME $DNS_DOCK
+  docker run -d --network $LOCALNET --ip $DNS_IP --name=$DNS_NAME $DNS_DOCK
   check_exit "docker run $DNS_DOCK"
 fi
 
@@ -93,16 +98,16 @@ fi
   for i in $(seq 1 $NUM_MINERS)
   do
       echo "Starting Bitcoin miner container"
-      docker run -d --network $BTCNET --dns=$DNS_IP $BTC_MINER_DOCK
+      docker run -d --network $LOCALNET --dns=$DNS_IP $BTC_MINER_DOCK
       check_exit "docker run $BTC_MINER_DOCK"
   done
 
 #Start nodes
   for i in $(seq 1 $NUM_NODES)
   do
-      #TODO For each container in the list
+      #TODO Assign dynamic name "btcnode-N"
       echo "Starting Bitcoin node container"
-      docker run -d --network $BTCNET --dns=$DNS_IP $BTC_NODE_DOCK
+      docker run -d --network $LOCALNET --dns=$DNS_IP $BTC_NODE_DOCK $BTC_NET
       check_exit "docker run $BTC_NODE_DOCK"
   done
 
