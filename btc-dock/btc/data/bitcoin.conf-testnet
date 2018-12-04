@@ -1,8 +1,0 @@
-# testnet-box functionality
-testnet=1
-upnp=0
-
-listenonion=0
-
-#rpcuser=user
-#rpcpassword=password
