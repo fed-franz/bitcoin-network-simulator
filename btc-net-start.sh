@@ -18,7 +18,8 @@ DNS_DOCK="fedfranz/btcnet-dns"
 DNS_NAME="btcdns"
 DNS_IP="10.1.1.2"
 BTCNET=btcnet
-BTC_NODE_DOCK="fedfranz/bitcoinlocal:0.12.0-testnet"
+# BTC_NODE_DOCK="fedfranz/bitcoinlocal:0.12.0-testnet"
+BTC_NODE_DOCK="fedfranz/btcnet-node:0.17"
 BTC_MINER_DOCK="fedfranz/bitcoinlocal:0.12.0-testnet-miner"
 RUN_OPTIONS=""
 

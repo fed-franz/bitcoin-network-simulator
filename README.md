@@ -22,11 +22,19 @@ Run:
 Check if the DNS is working:
 `nslookup seed.seeder.btc 10.1.1.2`  
 Stop:
-`docker stop btcdns`
+`docker stop btcdns`  
 
 To overwrite BIND files without rebuilding the container you can mount a folder at `/root/mnt`.
 Files in this folder will be copied recursively into `/etc/bind` and overwrite default files.  
 In order to work properly, the mounted folder must have the same structure as `/etc/bind`. See `bind` folder in this repo as a reference.  
 You can use docker's `-v` option to mount the folder at runtime.  
 For instance:  
-`docker run -d --rm --network btcnet --ip 10.1.1.2 --name=btcdns -v $(pwd)/bind:/root/mnt fedfranz/btcnet-dns`
+`docker run -d --rm --network btcnet --ip 10.1.1.2 --name=btcdns -v $(pwd)/bind:/root/mnt fedfranz/btcnet-dns`  
+
+To check the log, you can execute the following command:  
+`docker exec -it btcdns tcpdump -i eth0 -vvv -s 0 -l -n port 53`  
+or run a bash terminal and then execute the command `dnslog`:  
+```
+$ docker exec -it btcdns /bin/bash
+# dnslog
+```

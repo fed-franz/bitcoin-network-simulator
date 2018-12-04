@@ -1,5 +1,8 @@
 #!/bin/sh
+# Clear the DNS nameserver imported at runtime by docker
 echo "nameserver 127.0.0.1" > /etc/resolv.conf
+
+# Aliases
 echo "alias dnslog='tcpdump -i eth0 -vvv -s 0 -l -n port 53 &'" >> ~/.bashrc
 
 # Copy files from mounted directory to bind directory
