@@ -12,8 +12,8 @@ function check_exit () {
 
 
 ### ENVIRONMENT ###
-NUM_NODES=100
-NUM_MINERS=10
+NUM_NODES=10
+NUM_MINERS=1
 
 DNS_DOCK="fedfranz/btcnet-dns"
 DNS_NAME="btcdns"
@@ -107,6 +107,7 @@ then
   echo "DNS seeder container already exists; skipping..."
 else
   echo "Starting Bitcoin DNS seeder"
+  echo "docker run -d --rm --network=$LOCALNET --ip=$DNS_IP --name=$DNS_NAME $DNS_DOCK"
   docker run -d --rm --network=$LOCALNET --ip=$DNS_IP --name=$DNS_NAME $DNS_DOCK
   check_exit "docker run $DNS_DOCK"
 fi
@@ -117,6 +118,7 @@ for i in $(seq 1 $NUM_NODES)
 do
     #TODO Assign dynamic name "btcnode-N"
     echo "Starting Bitcoin node container"
+    echo "docker run -d --rm --network=$LOCALNET --dns=$DNS_IP --name=$NODE_NAME$i $NODE_DOCK $BTC_NET"
     docker run -d --rm --network=$LOCALNET --dns=$DNS_IP --name=$NODE_NAME$i $NODE_DOCK $BTC_NET
     check_exit "docker run $NODE_DOCK"
 done
