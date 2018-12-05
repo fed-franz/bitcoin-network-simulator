@@ -6,7 +6,7 @@ ENV startscript=start-dns.sh
 
 # Install requirements
 RUN apt-get update \
- && apt-get install --yes bind9 bind9utils rsyslog tcpdump
+ && apt-get install --yes dnsutils bind9 bind9utils rsyslog tcpdump
 
 RUN mkdir /var/log/named \
 && chown -R bind:root /var/log/named \
@@ -16,6 +16,7 @@ RUN mkdir /var/log/named \
 ENV binddir=./bind
 COPY $binddir/named.conf /etc/bind/named.conf
 COPY $binddir/zones/seeder.btc.zone /etc/bind/zones/seeder.btc.zone
+# COPY $binddir/zones/seed.seeder.btc.zone /etc/bind/zones/seed.seeder.btc.zone
 RUN mkdir /root/mnt
 
 WORKDIR /root/
