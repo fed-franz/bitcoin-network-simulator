@@ -1,16 +1,18 @@
-$TTL 86400      ; 1 day
-
+$TTL 1D
 @       IN SOA  ns.seeder.btc. root.seeder.btc. (
-                                  2012080701 ; serial
-                                  28800      ; refresh (8 hours)
-                                  7200       ; retry (2 hours)
-                                  604800     ; expire (1 week)
-                                  86400      ; minimum (1 day)
-                                  )
-@	IN	NS	ns.seeder.btc.
-ns	IN	A	10.1.1.2
+                2012080701 ; serial
+                28800      ; refresh (8 hours)
+                7200       ; retry (2 hours)
+                604800     ; expire (1 week)
+                86400      ; minimum (1 day)
+                )
+
+@ 	IN	NS	ns.seeder.btc.
+ns	IN	A	  10.1.1.2
 
 seed	IN	A	10.1.0.2
 seed	IN	A	10.1.0.3
 seed	IN	A	10.1.0.4
 seed	IN	A	10.1.0.5
+
+x9.seed	IN	CNAME	seed

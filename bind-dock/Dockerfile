@@ -16,7 +16,6 @@ RUN mkdir /var/log/named \
 ENV binddir=./bind
 COPY $binddir/named.conf /etc/bind/named.conf
 COPY $binddir/zones/seeder.btc.zone /etc/bind/zones/seeder.btc.zone
-# COPY $binddir/zones/seed.seeder.btc.zone /etc/bind/zones/seed.seeder.btc.zone
 RUN mkdir /root/mnt
 
 WORKDIR /root/

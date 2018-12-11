@@ -37,4 +37,6 @@ or run a bash terminal and then execute the command `dnslog`:
 ```
 $ docker exec -it btcdns /bin/bash
 # dnslog
-```
+```  
+
+`x9.seed.seeder.btc` is redirected to `seed.seeder.btc`
