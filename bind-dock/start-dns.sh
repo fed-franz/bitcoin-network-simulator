@@ -6,7 +6,7 @@ echo "nameserver 127.0.0.1" > /etc/resolv.conf
 echo "alias dnslog='tcpdump -i eth0 -vvv -s 0 -l -n port 53 &'" >> ~/.bashrc
 
 # Copy files from mounted directory to bind directory
-yes | cp -rf /root/mnt/* /etc/bind/
+yes | cp -rf /root/mnt/* /etc/bind/ 2>/dev/null
 
 # Starts log service and BIND9 with log enables
 service rsyslog start
