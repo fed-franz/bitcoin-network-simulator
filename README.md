@@ -40,3 +40,9 @@ $ docker exec -it btcdns /bin/bash
 ```  
 
 `x9.seed.seeder.btc` is redirected to `seed.seeder.btc`
+
+### NODE
+Syntax:  
+`docker run -d --rm --network=btcnet --dns=DNS_IP --name=btcnode-sipa fedfranz/btcnet-node [BTC_NET] [DNS_IP]`  
+
+Default `DNS_IP` is 10.1.1.2
