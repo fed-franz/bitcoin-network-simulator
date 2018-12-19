@@ -48,10 +48,8 @@ alias btcstart='bitcoind -onlynet=ipv4 -debug -logips -daemon'
 alias btcstop='$btccli stop'
 alias getlog='cat $logdir/debug.log'"\
  >> ~/.bashrc
-# echo alias getpeersaddr="getpeers | grep -E '\\\"addr\\\": \\\"|inbound'" >> ~/.bashrc
-
 
 source ~/.bashrc
-bitcoind $obtcnet #-debug=net -debug=addrman
+bitcoind $obtcnet
 # \
 # && ./btc-node-run.sh $btcdir $datadir $btcnet
