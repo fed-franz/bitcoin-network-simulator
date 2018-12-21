@@ -131,8 +131,9 @@ then
   echo "DNS seeder container already exists; skipping..."
 else
   echo "Starting Bitcoin DNS seeder"
-  echo "docker run -d --network=$LOCALNET --ip=$DNS_IP --name=$DNS_NAME $DNS_DOCK"
-  docker run -d --rm --network=$LOCALNET --ip=$DNS_IP --name=$DNS_NAME $DNS_DOCK
+  runcmd="docker run -d --network=$LOCALNET --ip=$DNS_IP --name=$DNS_NAME $DNS_DOCK"
+  echo $runcmd
+  $runcmd
   check_exit "docker run $DNS_DOCK"
 fi
 
@@ -140,10 +141,10 @@ fi
 #Start nodes
 for i in $(seq 1 $NUM_NODES)
 do
-    #TODO Assign dynamic name "btcnode-N"
     echo "Starting Bitcoin node container"
-    echo "docker run -d --rm --network=$LOCALNET --dns=$DNS_IP --name=$NODE_NAME$i $NODE_DOCK $BTC_NET"
-    docker run -d --rm --network=$LOCALNET --dns=$DNS_IP --name=$NODE_NAME$i $NODE_DOCK $BTC_NET
+    runcmd="docker run -d --network=$LOCALNET --dns=$DNS_IP --name=$NODE_NAME$i $NODE_DOCK $BTC_NET"
+    echo $runcmd
+    $runcmd
     check_exit "docker run $NODE_DOCK"
 done
 
