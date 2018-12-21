@@ -37,19 +37,31 @@ case "$btcnet" in
 
 esac
 
+btcd="bitcoind $obtcnet -onlynet=ipv4 -logips"
 btccli="bitcoin-cli $obtcnet"
 
 echo \
-"alias btc-cli='$btccli $obtcnet'
+"alias bitcoind='btcd'
+alias bitcoin-cli='$btccli'
 alias getblockcount='$btccli getblockcount'
 alias getpeers='$btccli getpeerinfo'
 alias getpeersaddr=\"getpeers | grep -E '\\\"addr\\\": \\\"|inbound'\"
-alias btcstart='bitcoind -onlynet=ipv4 -debug -logips -daemon'
+alias btcstart='$btcd'
 alias btcstop='$btccli stop'
 alias getlog='cat $logdir/debug.log'"\
  >> ~/.bashrc
 
-source ~/.bashrc
-bitcoind $obtcnet
-# \
-# && ./btc-node-run.sh $btcdir $datadir $btcnet
+echo \
+"
+function start_btc () {
+ $btcd -daemon
+}
+
+function stop_btc () {
+ $btccli stop
+}
+"\
+>> ~/.bash_aliases
+
+# source ~/.bashrc
+./btc-node-run.sh

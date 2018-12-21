@@ -15,27 +15,48 @@ function check_exit () {
 NUM_NODES=10
 NUM_MINERS=1
 
+BASE_NAME="btc"
+
 DNS_DOCK="fedfranz/btcnet-dns"
-DNS_NAME="btcdns"
+DNS_NAME=$BASE_NAME"dns"
 DNS_IP="10.1.1.2"
 
 BTC_NET=""
-LOCALNET=btcnet
+LOCALNET=$BASE_NAME"net"
 
 # NODE_DOCK="fedfranz/bitcoinlocal:0.12.0-testnet"
-NODE_NAME="btcnode"
+NODE_NAME=$BASE_NAME"node"
 NODE_DOCK="fedfranz/btcnet-node"
 MINER_DOCK="fedfranz/bitcoinlocal:0.12.0-testnet-miner"
 RUN_OPTIONS=""
 
+#RUNTIME COMMANDS OPTIONS
+NODE=""
 
 ### FUNCTIONS ###
-function stop_containers () {
-    docker stop $DNS_NAME
-    docker stop $(docker ps -a | grep $NODE_NAME | awk '{print $1}')
-    exit 0
+function stop () {
+    running_nodes=$(docker ps | grep $BASE_NAME | awk '{print $1}')
+    if [ ! -z "$running_nodes" ]; then
+      docker stop $running_nodes
+    fi
 }
 
+function reset () {
+  stop
+  all_nodes=$(docker ps -a | grep $BASE_NAME | awk '{print $1}')
+  if [ ! -z "$all_nodes" ]; then
+    docker rm $all_nodes
+  fi
+}
+
+function getpeers () {
+  if [ -z "$1" ]; then
+    : #TODO for each node
+  else
+    nodenum=$1
+    docker exec -it btcnode$nodenum /bin/bash -ic "getpeersaddr"
+  fi
+}
 
 #ARGS
 ### ARGUMENTS PARSING ###
@@ -43,12 +64,9 @@ function stop_containers () {
 for i in "$@"
 do
 case $i in
-  stop)
-    stop_containers
-    shift
-  ;;
   -n=*|--num-nodes=*)
     NUM_NODES="${i#*=}"
+    NODE="${i#*=}" #Used for runtime commands
     shift
   ;;
   -m=*|--num-miners=*)
@@ -67,13 +85,19 @@ case $i in
     BTC_NET="${i#*=}"
     shift
   ;;
-  *)
-    RUN_OPTIONS+=" $i"
+  -o=*)
+    RUN_OPTIONS+=" $i" #TODO Currently unused
     shift
+  ;;
+
+  *) # Execute commands
+    cmd=$i
+    shift
+    $cmd $@
+    exit 0
   ;;
 esac
 done
-
 
 ### BEGINNING OF PROGRAM ###
 echo "Starting $NUM_NODES nodes and $NUM_MINERS miners"
@@ -107,7 +131,7 @@ then
   echo "DNS seeder container already exists; skipping..."
 else
   echo "Starting Bitcoin DNS seeder"
-  echo "docker run -d --rm --network=$LOCALNET --ip=$DNS_IP --name=$DNS_NAME $DNS_DOCK"
+  echo "docker run -d --network=$LOCALNET --ip=$DNS_IP --name=$DNS_NAME $DNS_DOCK"
   docker run -d --rm --network=$LOCALNET --ip=$DNS_IP --name=$DNS_NAME $DNS_DOCK
   check_exit "docker run $DNS_DOCK"
 fi
@@ -133,4 +157,5 @@ do
     check_exit "docker run $MINER_DOCK"
 done
 
-  #TODO loop nodes on/off
+#TODO loop nodes on/off
+# ./btc-net-nodes.sh $NODE_NAME &
