@@ -141,6 +141,13 @@ fi
 #Start nodes
 for i in $(seq 1 $NUM_NODES)
 do
+    #TODO Assign dynamic name "btcnode-N"
+    # Use counter for the number of nodes to run, plus seq
+    # running_nodes=$(docker ps | grep $BASE_NAME | awk '{print $1}')
+    # if [ ! -z "$running_nodes" ]; then
+    #   docker stop $running_nodes
+    # fi
+
     echo "Starting Bitcoin node container"
     runcmd="docker run -d --network=$LOCALNET --dns=$DNS_IP --name=$NODE_NAME$i $NODE_DOCK $BTC_NET"
     echo $runcmd
