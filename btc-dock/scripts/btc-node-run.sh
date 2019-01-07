@@ -14,7 +14,7 @@ do
 
   probability=$((RANDOM%100))
   echo "PROBABILITY=$probability"
-  if (( $probability <= 30 )); then
+  if (( $probability <= 50 )); then
     bitcoin-cli getblockchaininfo &> /dev/null
     if [ $? -ne 0 ]; then
       echo "Starting Bitcoin client..."
