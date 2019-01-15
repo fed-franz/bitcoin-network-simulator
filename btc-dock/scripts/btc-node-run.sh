@@ -7,20 +7,21 @@ start_btc
 
 while :
 do
-  # Sleep rand time (0-60 sec)
-  randwait=$((RANDOM%300))
-  echo "LOOP: sleeping $randwait ..."
-	sleep $((60 + $randwait))
+  # Sleep rand time (30-120 sec)
+  randwait=$((RANDOM%90 + 30))
+  echo "SLEEP $randwait seconds..."
+	sleep $(($randwait))
 
   probability=$((RANDOM%100))
-  echo "PROBABILITY=$probability"
-  if (( $probability <= 50 )); then
-    bitcoin-cli getblockchaininfo &> /dev/null
+  echo "PROB=$probability (70+ triggers action)"
+  if (( $probability >= 70 )); then
+    date +"%Y-%m-%d %H:%M:%S"
+    check_btc
     if [ $? -ne 0 ]; then
-      echo "Starting Bitcoin client..."
+      echo "start_btc"
       start_btc
     else
-      echo "Stopping Bitcoin client..."
+      echo "stop_btc"
       stop_btc
     fi
   fi

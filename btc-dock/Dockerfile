@@ -15,7 +15,7 @@ ENV bindir=./btc/bin
 # Install utilities
 # net-tools -> ifconfig ; dnsutils -> nslookup
 RUN apt-get update
-RUN apt-get install --yes net-tools dnsutils wget bc
+RUN apt-get install --yes iputils-ping net-tools dnsutils wget bc
 
 # Copy Bitcoin files
 WORKDIR /root/

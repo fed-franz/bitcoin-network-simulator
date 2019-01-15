@@ -1,17 +1,18 @@
 #!/bin/bash
 
 ### ENVIRONMENT ###
+BTC_NET="testnet"
+
 NUM_NODES=10
 NUM_MINERS=1
 
 BASE_NAME="btc"
+LOCALNET=$BASE_NAME"net"
 
-DNS_DOCK="fedfranz/btcnet-dns"
 DNS_NAME=$BASE_NAME"dns"
+DNS_DOCK="fedfranz/btcnet-dns"
 DNS_IP="10.1.1.2"
 
-BTC_NET=""
-LOCALNET=$BASE_NAME"net"
 
 # NODE_DOCK="fedfranz/bitcoinlocal:0.12.0-testnet"
 NODE_NAME=$BASE_NAME"node"
@@ -33,11 +34,92 @@ function check_exit () {
     fi
 }
 
-
 ### FUNCTIONS ###
+# Update DNS zone file
+function update_zonefile () {
+  zonefile="./bind-dock/mnt/zones/seeder.btc.zone"
+  n=$1
+  overwrite=$2
+
+  # Are we overwriting the file or adding new addresses ?
+  if [ "$overwrite" = true ] ; then
+    # Delete current seed addresses
+    sed -i '/seed\sIN\sA/d' $zonefile
+    first=1
+  else
+    # Get the last ip's last octet
+    #NOTE This assumes addresses are in ascending order (last ip is the highest)
+    #TODO Take other octets into account
+    lastip=$(awk 'END {print $NF}' $zonefile)
+    lastoctet=${lastip##*.}
+    first=$(expr $lastoctet + 1)
+  fi
+
+  # Write new addresses
+  last=$(expr $first + $n - 1)
+  for i in $(seq $first $last)
+  do
+    #TODO if $i=254 -> i=1 j=1 (10.1.$j.$i)
+    echo "seed	IN	A	10.1.0.$i" >> $zonefile
+  done
+}
+
+# Run DNS container
+function run_dns () {
+  update=false
+  overwrite=false
+  numnodes=$NUM_NODES
+  mount=""
+
+  for i in "$@"
+  do
+  case $i in
+    -i=*|--image=*)
+      DNS_DOCK="${i#*=}"
+      shift
+    ;;
+    -ip=*)
+      DNS_IP="${i#*=}"
+      shift
+    ;;
+    -u|--update)
+      update=true
+      shift
+    ;;
+    -o|--overwrite) #NOTE Valid when updating
+      overwrite=true
+      shift
+    ;;
+    -n=*|--numnodes=*) #NOTE Valid when updating
+      numnodes="${i#*=}"
+      shift
+    ;;
+    *) # Ignore
+      shift
+    ;;
+  esac
+  done
+
+  if [ $update = true ] ; then
+    update_zonefile $numnodes $overwrite
+    mount="  -v $(pwd)/bind-dock/mnt:/root/mnt"
+
+    #Restart DNS container
+    if docker ps | grep -q $DNS_NAME ; then
+      echo "Stopping DNS container"
+      docker stop $DNS_NAME
+    fi
+  fi
+
+  # Run DNS container
+  echo "Starting DNS container"
+  cmd="docker run -d --rm --network=$LOCALNET --ip=$DNS_IP --name=$DNS_NAME $mount $DNS_DOCK"
+  echo $cmd
+  $cmd
+}
 
 # Run nodes
-function runcontainers () {
+function run_nodes () {
   ctype=$1
   n=$2
   net=$3
@@ -53,10 +135,6 @@ function runcontainers () {
     "miner")
       basename="btcminer"
       imagename=$MINER_DOCK
-    ;;
-    "dns")
-      basename="btcdns"
-      imagename=$DNS_DOCK
     ;;
     *)
       echo "$ctype is not a valid container type. Aborting..."
@@ -77,7 +155,7 @@ function runcontainers () {
     fi
 
     #Run containers
-    echo "Starting $ctype containers"
+    echo "Starting $ctype containers ($n)"
     for i in $(seq $first $last)
     do
         runcmd="docker run -d --network=$net --dns=$DNS_IP $options --name=$basename$i $imagename $BTC_NET"
@@ -93,8 +171,11 @@ function runcontainers () {
 #   $2 : number of containers to start
 function run () {
   #TODO get network as parameter - check if no $3, set net=$LOCALNET
-
-  runcontainers $1 $2 $LOCALNET
+  ctype=$1
+  n=$2
+  run_nodes $ctype $n $LOCALNET
+  sleep $((5 + $n))
+  run_dns -u -n=$n
 }
 
 # Start simulation
@@ -111,27 +192,27 @@ function start () {
     check_exit "docker network create"
   fi
 
-  #TODO Update docker images ?
+  #TODO Update docker images ? - Take as option
   #TODO Take list of images as a parameter - or just use one image with different tags (take tags list)
   # docker pull $NODE_DOCK
   # docker pull $MINER_DOCK
   # docker pull $DNS_DOCK
 
   #TODO Start fixed nodes with specific IPs (those returned by the DNS?)
-  echo "Starting $NUM_NODES nodes and $NUM_MINERS miners"
   if docker ps | grep -q $DNS_NAME
   then
     echo "DNS seeder container already exists; skipping..."
-  else
-    #TODO ? automatically add first N nodes to the config file, after starting the containers (alternatively, just add the first 10 IPs to the zone file)
-    #TODO ? Add zone file on the fly and mount it to overwrite default zone file
-    runcontainers "dns" 1 $LOCALNET "--ip=$DNS_IP"
   fi
-  runcontainers "node" $NUM_NODES $LOCALNET
-  runcontainers "miner" $NUM_MINERS $LOCALNET
+  run_nodes "node" $NUM_NODES $LOCALNET
+  run_nodes "miner" $NUM_MINERS $LOCALNET
+
+  #TODO Get options to choose if to run DNS dynamic (-u -o) or not OR get number of addresses to add to DNS (-n=N)
+  tot_nodes=$(($NUM_NODES + $NUM_MINERS))
+  sleep $((5 + $tot_nodes))
+  run_dns -u -o -n=$tot_nodes
 }
 
-# Stop simultion
+# Stop simulation (stop all containers)
 function stop () {
     running_nodes=$(docker ps | grep $BASE_NAME | awk '{print $1}')
     if [ ! -z "$running_nodes" ]; then
@@ -139,6 +220,7 @@ function stop () {
     fi
 }
 
+# Reset simulation (stop and remove all containers)
 function reset () {
   stop
   all_nodes=$(docker ps -a | grep $BASE_NAME | awk '{print $1}')
@@ -147,12 +229,32 @@ function reset () {
   fi
 }
 
+# Prints node's IP address
+function getnodeaddr () {
+  nodenum=$1
+
+  nodeaddr=$(docker exec -it $NODE_NAME$nodenum /bin/bash -ic "ifconfig eth0" | grep "inet " | cut -d: -f2 | awk '{print $1}')
+  echo $nodeaddr
+}
+
+# Prints current peers connections
 function getpeers () {
-  if [ -z "$1" ]; then
-    : #TODO for each node
-  else
+  if [ ! -z "$1" ]; then
     nodenum=$1
-    docker exec -it btcnode$nodenum /bin/bash -ic "getpeersaddr"
+    docker exec -it $NODE_NAME$nodenum /bin/bash -ic "getpeersaddr"
+  else
+    numnodes=$(docker ps -a | grep $NODE_NAME | wc -l)
+    for i in $(seq 1 $numnodes)
+    do
+      echo "$NODE_NAME$i $(getnodeaddr $i)"
+      peers=$(docker exec -it $NODE_NAME$i /bin/bash -ic "getpeersaddr")
+      err=$(echo "$peers" | grep error | wc -l)
+      if (( $err > 0 )); then
+        echo "Node offline"
+      else
+        echo "$peers"
+      fi
+    done
   fi
 }
 

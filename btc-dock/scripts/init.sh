@@ -55,10 +55,16 @@ echo \
 "
 function start_btc () {
  $btcd -daemon
+ sleep 15
 }
 
 function stop_btc () {
  $btccli stop
+ sleep 15
+}
+
+function check_btc () {
+ $btccli getblockcount &> /dev/null
 }
 "\
 >> ~/.bash_aliases
