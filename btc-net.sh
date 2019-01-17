@@ -35,6 +35,55 @@ function check_exit () {
 }
 
 ### FUNCTIONS ###
+function get_next_ips () {
+  #TODO Check mandatory argument
+  n=$1
+
+  # Get highest IP
+  zonefile="/etc/bind/zones/seeder.btc.zone"
+  #NOTE This assumes addresses are in ascending order (last ip is the highest)
+  lastip=$(docker exec -it $DNS_NAME /bin/bash -ic "tail -n 1 $zonefile" | awk 'END {print $NF}' | tr -d '\015')
+  lastoctet=${lastip##*.}
+
+  # Write new addresses
+  first=$(expr $lastoctet + 1)
+  last=$(expr $first + $n - 1)
+  iplist=""
+  #TODO if $i=254 -> i=1 j=1 (10.1.$j.$i)
+  for i in $(seq $first $last)
+  do
+    iplist+="10.1.0.$i "
+  done
+
+  echo $iplist
+}
+
+# Add new addresses to the DNS
+function update_dns () {
+  # Parse arguments
+  for i in "$@" ; do
+    case $i in
+      -n=*) #Add the next $n addresses (in increasing order)
+        n="${i#*=}"
+        iplist=($(get_next_ips $n))
+        shift
+      ;;
+      *) # Take list of addresses as arguments
+        iplist=("$@")
+    esac
+  done
+
+  # Add each address to the zone file
+  for i in "${iplist[@]}"
+  do
+    echo Adding: $i
+    docker exec -it $DNS_NAME /bin/bash -ic "echo \"seed IN A $i\" >> /etc/bind/zones/seeder.btc.zone"
+  done
+
+  # Restart BIND
+  docker exec -it $DNS_NAME /bin/bash -ic "/etc/init.d/bind9 restart"
+}
+
 # Update DNS zone file
 function update_zonefile () {
   zonefile="./bind-dock/mnt/zones/seeder.btc.zone"
@@ -175,8 +224,8 @@ function run () {
   ctype=$1
   n=$2
   run_nodes $ctype $n $LOCALNET
-  sleep $((5 + $n))
-  run_dns -u -n=$n
+
+  update_dns -n=$n
 }
 
 # Start simulation
