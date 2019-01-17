@@ -13,8 +13,8 @@ do
 	sleep $(($randwait))
 
   probability=$((RANDOM%100))
-  echo "PROB=$probability (70+ triggers action)"
-  if (( $probability >= 70 )); then
+  echo "PROB=$probability (90+ triggers action)"
+  if (( $probability >= 90 )); then
     date +"%Y-%m-%d %H:%M:%S"
     check_btc
     if [ $? -ne 0 ]; then

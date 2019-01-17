@@ -45,7 +45,7 @@ echo \
 alias bitcoin-cli='$btccli'
 alias getblockcount='$btccli getblockcount'
 alias getpeers='$btccli getpeerinfo'
-alias getpeersaddr=\"getpeers | grep -E '\\\"addr\\\": \\\"|inbound'\"
+alias getpeersaddr=\"getpeers | grep --color=never -E '\\\"addr\\\": \\\"|inbound'\"
 alias btcstart='$btcd'
 alias btcstop='$btccli stop'
 alias getlog='cat $logdir/debug.log'"\

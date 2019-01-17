@@ -108,6 +108,7 @@ function run_dns () {
     if docker ps | grep -q $DNS_NAME ; then
       echo "Stopping DNS container"
       docker stop $DNS_NAME
+      sleep 3
     fi
   fi
 
@@ -202,14 +203,14 @@ function start () {
   if docker ps | grep -q $DNS_NAME
   then
     echo "DNS seeder container already exists; skipping..."
+  else
+    #TODO Get options to choose if to run DNS dynamic (-u -o) or not OR get number of addresses to add to DNS (-n=N)
+    tot_nodes=$(($NUM_NODES + $NUM_MINERS))
+    run_dns -u -o -n=$tot_nodes
   fi
+
   run_nodes "node" $NUM_NODES $LOCALNET
   run_nodes "miner" $NUM_MINERS $LOCALNET
-
-  #TODO Get options to choose if to run DNS dynamic (-u -o) or not OR get number of addresses to add to DNS (-n=N)
-  tot_nodes=$(($NUM_NODES + $NUM_MINERS))
-  sleep $((5 + $tot_nodes))
-  run_dns -u -o -n=$tot_nodes
 }
 
 # Stop simulation (stop all containers)
@@ -237,23 +238,48 @@ function getnodeaddr () {
   echo $nodeaddr
 }
 
+# ParsePeers
+function parsepeers () {
+  if [ -z "$1" ]; then
+    echo "ERR: nodename expected"; exit 1
+  fi
+  nodename=$1 #NODE_NAME
+
+  getpeers=$(docker exec -it $nodename /bin/bash -ic "getpeersaddr")
+
+  # Check for errors (error output means node's offline)
+  err=$(echo "$getpeers" | grep error | wc -l)
+  if (( $err > 0 )); then
+    echo "Node offline"
+  else
+    peers=$(echo "$getpeers" | sed 's/^ *//' | cut -d' ' -f2 | sed -e 's/,//' -e 's/^"//' -e 's/"//' | tr -d '\015')
+    IFS=$'\n' array=($peers)
+
+    index=0
+    declare -A LIST
+    for (( i = 0; i < ${#array[@]}; i=i+2 )); do
+      LIST[$index,0]=${array[$i]}
+      LIST[$index,1]=${array[$((i+1))]}
+      index=$((index+1))
+    done
+    index=$((index-1))
+
+    for i in $(seq 0 $(($index-1))); do
+      echo "${LIST[$i,0]} ($([[ ${LIST[$i,1]} = true ]] && echo "inbound" || echo "outbound"))"
+    done
+  fi
+}
+
 # Prints current peers connections
 function getpeers () {
   if [ ! -z "$1" ]; then
-    nodenum=$1
-    docker exec -it $NODE_NAME$nodenum /bin/bash -ic "getpeersaddr"
+    parsepeers $NODE_NAME$1
   else
     numnodes=$(docker ps -a | grep $NODE_NAME | wc -l)
     for i in $(seq 1 $numnodes)
     do
-      echo "$NODE_NAME$i $(getnodeaddr $i)"
-      peers=$(docker exec -it $NODE_NAME$i /bin/bash -ic "getpeersaddr")
-      err=$(echo "$peers" | grep error | wc -l)
-      if (( $err > 0 )); then
-        echo "Node offline"
-      else
-        echo "$peers"
-      fi
+      echo "$NODE_NAME$i ($(getnodeaddr $i))"
+      parsepeers $NODE_NAME$i
     done
   fi
 }
