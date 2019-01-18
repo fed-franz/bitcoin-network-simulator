@@ -2,6 +2,7 @@
 
 ### ENVIRONMENT ###
 BTC_NET="testnet"
+BTC_NET_SUBNET="10.1.0"
 
 NUM_NODES=10
 NUM_MINERS=1
@@ -9,9 +10,10 @@ NUM_MINERS=1
 BASE_NAME="btc"
 LOCALNET=$BASE_NAME"net"
 
-DNS_NAME=$BASE_NAME"dns"
-DNS_DOCK="fedfranz/btcnet-dns"
-DNS_IP="10.1.1.2"
+TEST="test"
+# DNS_NAME=$BASE_NAME"dns"
+# DNS_DOCK="fedfranz/btcnet-dns"
+# DNS_IP="10.1.1.2"
 
 
 # NODE_DOCK="fedfranz/bitcoinlocal:0.12.0-testnet"
@@ -34,140 +36,13 @@ function check_exit () {
     fi
 }
 
+# Include DNS functions
+DIR="${BASH_SOURCE%/*}"
+if [[ ! -d "$DIR" ]]; then DIR="$PWD"; fi
+. "$DIR/btc-dns.sh"
+
+
 ### FUNCTIONS ###
-function get_next_ips () {
-  #TODO Check mandatory argument
-  n=$1
-
-  # Get highest IP
-  zonefile="/etc/bind/zones/seeder.btc.zone"
-  #NOTE This assumes addresses are in ascending order (last ip is the highest)
-  lastip=$(docker exec -it $DNS_NAME /bin/bash -ic "tail -n 1 $zonefile" | awk 'END {print $NF}' | tr -d '\015')
-  lastoctet=${lastip##*.}
-
-  # Write new addresses
-  first=$(expr $lastoctet + 1)
-  last=$(expr $first + $n - 1)
-  iplist=""
-  #TODO if $i=254 -> i=1 j=1 (10.1.$j.$i)
-  for i in $(seq $first $last)
-  do
-    iplist+="10.1.0.$i "
-  done
-
-  echo $iplist
-}
-
-# Add new addresses to the DNS
-function update_dns () {
-  # Parse arguments
-  for i in "$@" ; do
-    case $i in
-      -n=*) #Add the next $n addresses (in increasing order)
-        n="${i#*=}"
-        iplist=($(get_next_ips $n))
-        shift
-      ;;
-      *) # Take list of addresses as arguments
-        iplist=("$@")
-    esac
-  done
-
-  # Add each address to the zone file
-  for i in "${iplist[@]}"
-  do
-    echo Adding: $i
-    docker exec -it $DNS_NAME /bin/bash -ic "echo \"seed IN A $i\" >> /etc/bind/zones/seeder.btc.zone"
-  done
-
-  # Restart BIND
-  docker exec -it $DNS_NAME /bin/bash -ic "/etc/init.d/bind9 restart"
-}
-
-# Update DNS zone file
-function update_zonefile () {
-  zonefile="./bind-dock/mnt/zones/seeder.btc.zone"
-  n=$1
-  overwrite=$2
-
-  # Are we overwriting the file or adding new addresses ?
-  if [ "$overwrite" = true ] ; then
-    # Delete current seed addresses
-    sed -i '/seed\sIN\sA/d' $zonefile
-    first=1
-  else
-    # Get the last ip's last octet
-    #NOTE This assumes addresses are in ascending order (last ip is the highest)
-    #TODO Take other octets into account
-    lastip=$(awk 'END {print $NF}' $zonefile)
-    lastoctet=${lastip##*.}
-    first=$(expr $lastoctet + 1)
-  fi
-
-  # Write new addresses
-  last=$(expr $first + $n - 1)
-  for i in $(seq $first $last)
-  do
-    #TODO if $i=254 -> i=1 j=1 (10.1.$j.$i)
-    echo "seed	IN	A	10.1.0.$i" >> $zonefile
-  done
-}
-
-# Run DNS container
-function run_dns () {
-  update=false
-  overwrite=false
-  numnodes=$NUM_NODES
-  mount=""
-
-  for i in "$@"
-  do
-  case $i in
-    -i=*|--image=*)
-      DNS_DOCK="${i#*=}"
-      shift
-    ;;
-    -ip=*)
-      DNS_IP="${i#*=}"
-      shift
-    ;;
-    -u|--update)
-      update=true
-      shift
-    ;;
-    -o|--overwrite) #NOTE Valid when updating
-      overwrite=true
-      shift
-    ;;
-    -n=*|--numnodes=*) #NOTE Valid when updating
-      numnodes="${i#*=}"
-      shift
-    ;;
-    *) # Ignore
-      shift
-    ;;
-  esac
-  done
-
-  if [ $update = true ] ; then
-    update_zonefile $numnodes $overwrite
-    mount="  -v $(pwd)/bind-dock/mnt:/root/mnt"
-
-    #Restart DNS container
-    if docker ps | grep -q $DNS_NAME ; then
-      echo "Stopping DNS container"
-      docker stop $DNS_NAME
-      sleep 3
-    fi
-  fi
-
-  # Run DNS container
-  echo "Starting DNS container"
-  cmd="docker run -d --rm --network=$LOCALNET --ip=$DNS_IP --name=$DNS_NAME $mount $DNS_DOCK"
-  echo $cmd
-  $cmd
-}
-
 # Run nodes
 function run_nodes () {
   ctype=$1
@@ -238,28 +113,20 @@ function start () {
     #TODO Create multiple networks
     #TODO Take num of subnets as a parameter
     echo "Creating $LOCALNET network"
-    docker network create --internal --subnet 10.1.0.0/16 $LOCALNET
+    docker network create --internal --subnet $BTC_NET_SUBNET.0/16 $LOCALNET
     check_exit "docker network create"
   fi
 
-  #TODO Update docker images ? - Take as option
-  #TODO Take list of images as a parameter - or just use one image with different tags (take tags list)
-  # docker pull $NODE_DOCK
-  # docker pull $MINER_DOCK
-  # docker pull $DNS_DOCK
-
   #TODO Start fixed nodes with specific IPs (those returned by the DNS?)
-  if docker ps | grep -q $DNS_NAME
-  then
-    echo "DNS seeder container already exists; skipping..."
-  else
-    #TODO Get options to choose if to run DNS dynamic (-u -o) or not OR get number of addresses to add to DNS (-n=N)
-    tot_nodes=$(($NUM_NODES + $NUM_MINERS))
-    run_dns -u -o -n=$tot_nodes
-  fi
+  #TODO Get options to choose if to run DNS dynamic (-d) or not OR get number of addresses to add to DNS (-n=N)
+  tot_nodes=$(($NUM_NODES + $NUM_MINERS))
 
+  run_dns -d -n=$tot_nodes
   run_nodes "node" $NUM_NODES $LOCALNET
   run_nodes "miner" $NUM_MINERS $LOCALNET
+
+  #TODO node join/leave script
+  # ./btc-net-nodes.sh $NODE_NAME &
 }
 
 # Stop simulation (stop all containers)
@@ -375,7 +242,10 @@ case $i in
 esac
 done
 
-start
+#TODO Update docker images ? - Take as option
+#TODO Take list of images as a parameter - or just use one image with different tags (take tags list)
+# docker pull $NODE_DOCK
+# docker pull $MINER_DOCK
+# docker pull $DNS_DOCK
 
-#TODO loop nodes on/off
-# ./btc-net-nodes.sh $NODE_NAME &
+start
