@@ -100,7 +100,7 @@ function run () {
   n=$2
   run_nodes $ctype $n $LOCALNET
 
-  update_dns -n=$n
+  # update_dns -n=$n
 }
 
 # Start simulation
@@ -180,7 +180,7 @@ function parsepeers () {
     done
     index=$((index-1))
 
-    for i in $(seq 0 $(($index-1))); do
+    for i in $(seq 0 $(($index))); do
       echo "${LIST[$i,0]} ($([[ ${LIST[$i,1]} = true ]] && echo "inbound" || echo "outbound"))"
     done
   fi

@@ -54,7 +54,7 @@ alias getlog='cat $logdir/debug.log'"\
 echo \
 "
 function start_btc () {
- $btcd -daemon
+ $btcd -maxtipage=999999999 -daemon
  sleep 15
 }
 
